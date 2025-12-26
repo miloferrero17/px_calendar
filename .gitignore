@@ -1,0 +1,55 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# --- Virtualenvs ---
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Google OAuth / credentials
+client_secret*.json
+credentials*.json
+token*.json
+*oauth*.json
+
+# Supabase / local config
+config.json
+secrets.json
+
+# --- Logs ---
+*.log
+logs/
+*.out
+
+# --- Flask ---
+instance/
+*.sqlite
+*.db
+
+# --- OS / Editor ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- Archives ---
+*.zip
+*.tar.gz
+*.tgz

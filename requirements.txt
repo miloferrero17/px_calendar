@@ -1,0 +1,15 @@
+flask>=2.3,<4
+python-dotenv>=1.0,<2
+cryptography>=41,<45
+requests>=2.31,<3
+
+# Supabase stack (pin compatible)
+supabase==2.6.0
+postgrest==0.16.11
+httpx==0.27.2
+
+# Google APIs
+google-api-python-client>=2.120,<3
+google-auth>=2.25,<3
+google-auth-oauthlib>=1.2,<2
+google-auth-httplib2>=0.2,<1
