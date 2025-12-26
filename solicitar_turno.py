@@ -1,7 +1,7 @@
 # solicitar_turno.py
 import argparse
 import os
-from services.calendar_logic import next_n_slots, create_meeting
+from services.calendar_logic import next_n_slots, create_meeting, WEEKDAYS_ES
 from services.connection import ConnectionService, load_config
 
 def main():
@@ -22,8 +22,8 @@ def main():
     # 2. Interfaz inicial
     print(f"\n--- Turnera Médica: Dr/a {medico['nombre_completo']} ---")
     print("Seleccione el tipo de turno:")
-    print("1) Niño Sano (30 min)")
-    print("2) Demanda espontánea (20 min)")
+    print("1) Niño Sano")
+    print("2) Demanda espontánea")
     
     tipo_raw = input("Elija una opción (1 o 2): ").strip()
     
@@ -55,7 +55,12 @@ def main():
     # 4. Mostrar opciones al usuario
     print("\nElegí un turno:")
     for i, s in enumerate(slots, start=1):
-        print(f"{i}) {s.start.strftime('%a %d/%m - %H:%M')}")
+        # s.start.weekday() devuelve 0 para Lunes, 1 para Martes, etc.
+        nombre_dia = WEEKDAYS_ES[s.start.weekday()]
+        
+        # Ahora armamos el print usando esa variable
+        print(f"{i}) {nombre_dia} {s.start.strftime('%d/%m - %H:%M')}")
+        
     
     # OPCIÓN DINÁMICA: Solo aparece si 'usa_secretaria' es TRUE en la DB
     idx_secretaria = len(slots) + 1

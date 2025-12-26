@@ -68,8 +68,8 @@ class ConnectionService:
         data = getattr(res, "data", None)
         return data[0] if data else None
 
+    # En services/connection.py, localiza esta función:
     def get_medico_by_email(self, email: str) -> Optional[Dict[str, Any]]:
-        """Busca perfil y tokens del médico."""
         res_medico = self.supabase.table("medicos").select("*").eq("email", email).execute()
         if not res_medico.data:
             return None
@@ -77,7 +77,11 @@ class ConnectionService:
         medico_data = res_medico.data[0]
         token_data = self.get_user_row(email)
         if token_data:
-            medico_data.update(token_data)
+            # En lugar de medico_data.update(token_data)
+            # Solo pasamos los tokens, sin tocar el ID del médico
+            medico_data["access_token"] = token_data.get("access_token")
+            medico_data["refresh_token_encrypted"] = token_data.get("refresh_token_encrypted")
+            # ... agregar otros campos necesarios si hace falta
         return medico_data
 
     def update_user_row(self, email: str, fields: Dict[str, Any]) -> None:
