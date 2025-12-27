@@ -29,13 +29,12 @@ def main():
     print(f"Creando calendario en Google para: {args.nombre}...")
     try:
         service = conn.build_calendar_service(args.email)
-        
+                
         calendar_metadata = {
-            'summary': f"Consultorio: {args.nombre}",
+            'summary': f"Consultorio: {args.nombre}", # Corregido: f-string estándar
             'description': f"Sede: {args.direccion}",
             'timeZone': 'America/Argentina/Buenos_Aires'
         }
-        
         created_calendar = service.calendars().insert(body=calendar_metadata).execute()
         google_calendar_id = created_calendar['id']
         print(f"✅ Calendario de Google creado con ID: {google_calendar_id}")

@@ -84,7 +84,7 @@ if __name__ == "__main__":
     # Ejemplo: Bloquear todos los Lunes (0) para siempre
     configurar_disponibilidad_recurrente(
         email="milonguitaferrero@gmail.com",
-        consultorio_id="6e6dad23-f0da-4062-9889-485fc9ddb556", # Tu UUID de médico/consultorio
+        consultorio_id="21b73035-9a97-4a3e-b572-8333554116d1", # Tu UUID de médico/consultorio
         dia_semana=5, 
         apertura_str="14:00",
         cierre_str="18:00"

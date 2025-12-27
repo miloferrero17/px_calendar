@@ -34,4 +34,4 @@ def eliminar_consultorio_total(email, consultorio_id):
         print(f"❌ Error crítico: {e}")
 
 if __name__ == "__main__":
-    eliminar_consultorio_total("milonguitaferrero@gmail.com", "0022504c-2db7-42eb-bbf3-ac8744f69d2f")
+    eliminar_consultorio_total("milonguitaferrero@gmail.com", "21b73035-9a97-4a3e-b572-8333554116d1")
