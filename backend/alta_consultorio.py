@@ -1,6 +1,15 @@
 import argparse
+import os
+import sys
+
+# Agregamos la carpeta raíz al sistema de búsqueda de Python
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from services.connection import ConnectionService, load_config
 
+'''
+python3 backend/alta_consultorio.py --email milonguitaferrero@gmail.com --nombre "Consultorio Palermo" --direccion "Av. Santa Fe 1234"
+
+'''
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--email", required=True, help="Email del médico")

@@ -1,6 +1,15 @@
 # solicitar_turno.py
 import argparse
 import os
+import sys
+
+# Agregamos la carpeta raíz al sistema de búsqueda de Python
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Ahora las importaciones funcionarán correctamente
+from services.calendar_logic import next_n_slots, create_meeting, WEEKDAYS_ES
+from services.connection import ConnectionService, load_config
+
 from services.calendar_logic import next_n_slots, create_meeting, WEEKDAYS_ES
 from services.connection import ConnectionService, load_config
 
