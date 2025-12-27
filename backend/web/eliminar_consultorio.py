@@ -1,7 +1,27 @@
-import sys, os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import argparse
+import os
+import sys
 
-from services.connection import ConnectionService, load_config
+# 1. Localizamos la carpeta del archivo actual (.../backend/web)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 2. Subimos dos niveles para llegar a la raíz (../..)
+# De 'backend/web' a 'backend' y luego a 'raiz'
+project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+
+# 3. Verificamos si la ruta ya está en sys.path para evitar duplicados y la agregamos al inicio
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Ahora intentamos importar
+try:
+    from services.connection import ConnectionService, load_config
+    print("✅ Módulos cargados correctamente desde:", project_root)
+except ModuleNotFoundError as e:
+    print(f"❌ Error: No se encontró la carpeta 'services'.")
+    print(f"Buscando en: {project_root}")
+    print(f"Contenido de esa carpeta: {os.listdir(project_root) if os.path.exists(project_root) else 'Ruta no existe'}")
+    sys.exit(1)
 
 def eliminar_consultorio_total(email, consultorio_id):
     try:
@@ -34,4 +54,4 @@ def eliminar_consultorio_total(email, consultorio_id):
         print(f"❌ Error crítico: {e}")
 
 if __name__ == "__main__":
-    eliminar_consultorio_total("milonguitaferrero@gmail.com", "21b73035-9a97-4a3e-b572-8333554116d1")
+    eliminar_consultorio_total("milonguitaferrero@gmail.com", "5d31392d-31a6-485a-af9e-c5765489eb48")
