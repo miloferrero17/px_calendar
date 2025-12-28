@@ -53,3 +53,39 @@ instance/
 *.zip
 *.tar.gz
 *.tgz
+
+
+node_modules/
+.env
+.env.local
+.DS_Store
+dist/
+build/
+
+# Dependencias
+node_modules/
+
+# Build de Next.js
+.next/
+out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables de entorno (¡Muy importante por seguridad!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Otros
+.DS_Store
+*.pem
+
+node_modules/
+.next/
+out/
+.env*

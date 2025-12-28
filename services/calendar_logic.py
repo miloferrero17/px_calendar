@@ -176,3 +176,24 @@ def list_calendars(email: str) -> list[dict]:
         if not page_token:
             break
     return calendars
+
+def list_patient_appointments(email_doctor, patient_query):
+    """
+    Busca eventos en el calendario del doctor que coincidan 
+    con el nombre o email del paciente.
+    """
+    cfg = load_config()
+    conn = ConnectionService(cfg)
+    service = conn.build_calendar_service(email_doctor)
+    
+    now = datetime.utcnow().isoformat() + "Z"
+    # Buscamos eventos futuros que contengan el nombre del paciente
+    events_result = service.events().list(
+        calendarId="primary", 
+        timeMin=now,
+        q=patient_query, # Filtro de búsqueda
+        singleEvents=True,
+        orderBy="startTime"
+    ).execute()
+    
+    return events_result.get("items", [])
