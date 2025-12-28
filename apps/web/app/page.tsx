@@ -5,46 +5,32 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowRight, Building2, Clock, MapPin, Stethoscope } from "lucide-react"
+import { ArrowRight, Building2, Clock, MapPin, Stethoscope, Loader2 } from "lucide-react"
 
 type ClinicInfo = {
   name: string
   address: string
-  mondayStart: string
-  mondayEnd: string
-  tuesdayStart: string
-  tuesdayEnd: string
-  wednesdayStart: string
-  wednesdayEnd: string
-  thursdayStart: string
-  thursdayEnd: string
-  fridayStart: string
-  fridayEnd: string
-  saturdayStart: string
-  saturdayEnd: string
-  sundayStart: string
-  sundayEnd: string
+  mondayStart: string; mondayEnd: string;
+  tuesdayStart: string; tuesdayEnd: string;
+  wednesdayStart: string; wednesdayEnd: string;
+  thursdayStart: string; thursdayEnd: string;
+  fridayStart: string; fridayEnd: string;
+  saturdayStart: string; saturdayEnd: string;
+  sundayStart: string; sundayEnd: string;
 }
 
 export default function PediatricSetup() {
   const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
   const [clinicInfo, setClinicInfo] = useState<ClinicInfo>({
-    name: "",
-    address: "",
-    mondayStart: "",
-    mondayEnd: "",
-    tuesdayStart: "",
-    tuesdayEnd: "",
-    wednesdayStart: "",
-    wednesdayEnd: "",
-    thursdayStart: "",
-    thursdayEnd: "",
-    fridayStart: "",
-    fridayEnd: "",
-    saturdayStart: "",
-    saturdayEnd: "",
-    sundayStart: "",
-    sundayEnd: "",
+    name: "", address: "",
+    mondayStart: "", mondayEnd: "",
+    tuesdayStart: "", tuesdayEnd: "",
+    wednesdayStart: "", wednesdayEnd: "",
+    thursdayStart: "", thursdayEnd: "",
+    fridayStart: "", fridayEnd: "",
+    saturdayStart: "", saturdayEnd: "",
+    sundayStart: "", sundayEnd: "",
   })
 
   const handleNext = () => {
@@ -53,59 +39,72 @@ export default function PediatricSetup() {
     }
   }
 
-  const handleBack = () => {
-    setStep(1)
-  }
+  const handleBack = () => setStep(1)
 
-  const handleSubmit = () => {
-    console.log("Clinic information:", clinicInfo)
-    alert("¡Configuración completada! Revisa la consola para ver los datos.")
+  // --- FUNCIÓN DE CONEXIÓN CON EL BACKEND ---
+  const handleSubmit = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("http://localhost:8000/api/sedes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "milonguitaferrero@gmail.com", // Aquí podrías usar un estado de auth
+          nombre: clinicInfo.name,
+          direccion: clinicInfo.address, // Enviamos también la dirección
+          horarios: clinicInfo // Enviamos el objeto completo de horarios
+        }),
+      })
+
+      if (response.ok) {
+        alert("✅ ¡Sede y Calendario creados con éxito!")
+      } else {
+        const errorData = await response.json()
+        alert(`❌ Error: ${errorData.detail || "No se pudo crear la sede"}`)
+      }
+    } catch (error) {
+      console.error("Error al conectar con el servidor:", error)
+      alert("❌ No se pudo conectar con el servidor backend.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pediatric-light via-background to-pediatric-accent/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
-        {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-pediatric-primary mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 mb-4">
             <Stethoscope className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">
-            Configuración de Consultorio Pediátrico
+            Configuración de Consultorio
           </h1>
           <p className="text-muted-foreground text-lg">Paso {step} de 2</p>
         </div>
 
-        {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex gap-2">
-            <div
-              className={`h-2 flex-1 rounded-full transition-colors ${step >= 1 ? "bg-pediatric-primary" : "bg-muted"}`}
-            />
-            <div
-              className={`h-2 flex-1 rounded-full transition-colors ${step >= 2 ? "bg-pediatric-primary" : "bg-muted"}`}
-            />
+            <div className={`h-2 flex-1 rounded-full transition-colors ${step >= 1 ? "bg-blue-600" : "bg-muted"}`} />
+            <div className={`h-2 flex-1 rounded-full transition-colors ${step >= 2 ? "bg-blue-600" : "bg-muted"}`} />
           </div>
         </div>
 
-        {/* Step 1: Clinic Information */}
         {step === 1 && (
-          <Card className="border-pediatric-primary/20">
+          <Card className="border-blue-100">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
-                <Building2 className="w-6 h-6 text-pediatric-primary" />
+                <Building2 className="w-6 h-6 text-blue-600" />
                 Información del Consultorio
               </CardTitle>
               <CardDescription>Ingresa el nombre y la dirección de tu consultorio pediátrico</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-base font-medium">
-                  Nombre del Consultorio
-                </Label>
+                <Label htmlFor="name" className="text-base font-medium">Nombre del Consultorio</Label>
                 <Input
                   id="name"
-                  placeholder="Ej: Consultorio Pediátrico Dr. García"
+                  placeholder="Ej: Sede Palermo"
                   value={clinicInfo.name}
                   onChange={(e) => setClinicInfo({ ...clinicInfo, name: e.target.value })}
                   className="h-12 text-base"
@@ -114,7 +113,7 @@ export default function PediatricSetup() {
 
               <div className="space-y-2">
                 <Label htmlFor="address" className="text-base font-medium flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-pediatric-primary" />
+                  <MapPin className="w-4 h-4 text-blue-600" />
                   Dirección
                 </Label>
                 <Input
@@ -129,7 +128,7 @@ export default function PediatricSetup() {
               <Button
                 onClick={handleNext}
                 disabled={!clinicInfo.name || !clinicInfo.address}
-                className="w-full h-12 text-base bg-pediatric-primary hover:bg-pediatric-primary/90"
+                className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700"
                 size="lg"
               >
                 Continuar
@@ -139,15 +138,14 @@ export default function PediatricSetup() {
           </Card>
         )}
 
-        {/* Step 2: Office Hours */}
         {step === 2 && (
-          <Card className="border-pediatric-primary/20">
+          <Card className="border-blue-100">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
-                <Clock className="w-6 h-6 text-pediatric-primary" />
+                <Clock className="w-6 h-6 text-blue-600" />
                 Horarios de Atención
               </CardTitle>
-              <CardDescription>Define los horarios de atención para cada día de la semana</CardDescription>
+              <CardDescription>Define los horarios para {clinicInfo.name}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {[
@@ -159,53 +157,31 @@ export default function PediatricSetup() {
                 { day: "Sábado", start: "saturdayStart", end: "saturdayEnd" },
                 { day: "Domingo", start: "sundayStart", end: "sundayEnd" },
               ].map((item) => (
-                <div
-                  key={item.day}
-                  className="grid grid-cols-1 md:grid-cols-[120px_1fr_1fr] gap-4 items-center p-4 rounded-lg bg-muted/30"
-                >
+                <div key={item.day} className="grid grid-cols-1 md:grid-cols-[120px_1fr_1fr] gap-4 items-center p-4 rounded-lg bg-slate-50">
                   <Label className="font-medium text-base">{item.day}</Label>
-                  <div className="space-y-1">
-                    <Label htmlFor={`${item.start}`} className="text-sm text-muted-foreground">
-                      Hora de inicio
-                    </Label>
-                    <Input
-                      id={item.start}
-                      type="time"
-                      value={clinicInfo[item.start as keyof ClinicInfo] as string}
-                      onChange={(e) => setClinicInfo({ ...clinicInfo, [item.start]: e.target.value })}
-                      className="h-10"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor={`${item.end}`} className="text-sm text-muted-foreground">
-                      Hora de cierre
-                    </Label>
-                    <Input
-                      id={item.end}
-                      type="time"
-                      value={clinicInfo[item.end as keyof ClinicInfo] as string}
-                      onChange={(e) => setClinicInfo({ ...clinicInfo, [item.end]: e.target.value })}
-                      className="h-10"
-                    />
-                  </div>
+                  <Input
+                    type="time"
+                    value={clinicInfo[item.start as keyof ClinicInfo]}
+                    onChange={(e) => setClinicInfo({ ...clinicInfo, [item.start]: e.target.value })}
+                  />
+                  <Input
+                    type="time"
+                    value={clinicInfo[item.end as keyof ClinicInfo]}
+                    onChange={(e) => setClinicInfo({ ...clinicInfo, [item.end]: e.target.value })}
+                  />
                 </div>
               ))}
 
               <div className="flex gap-4 pt-4">
-                <Button
-                  onClick={handleBack}
-                  variant="outline"
-                  className="flex-1 h-12 text-base bg-transparent"
-                  size="lg"
-                >
+                <Button onClick={handleBack} variant="outline" className="flex-1 h-12">
                   Atrás
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  className="flex-1 h-12 text-base bg-pediatric-primary hover:bg-pediatric-primary/90"
-                  size="lg"
+                  disabled={loading}
+                  className="flex-1 h-12 bg-blue-600 hover:bg-blue-700"
                 >
-                  Completar Configuración
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Completar Configuración"}
                 </Button>
               </div>
             </CardContent>

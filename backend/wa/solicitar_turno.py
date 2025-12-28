@@ -7,11 +7,8 @@ import os
 import sys
 from datetime import timedelta
 
-# Ajuste de ruta para alcanzar la carpeta 'services' desde 'backend/wa'
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-from services.calendar_logic import next_n_slots, create_meeting, WEEKDAYS_ES, list_calendars
-from services.connection import ConnectionService, load_config
+from apps.web.backend.services.calendar_logic import next_n_slots, create_meeting, WEEKDAYS_ES, list_calendars
+from apps.web.backend.services.connection import ConnectionService, load_config
 
 def main():
     parser = argparse.ArgumentParser()

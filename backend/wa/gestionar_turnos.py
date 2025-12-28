@@ -8,11 +8,8 @@ import sys
 import re
 from datetime import datetime
 
-# Ajuste de ruta para alcanzar la carpeta 'services'
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-from services.connection import ConnectionService, load_config
-from services.calendar_logic import WEEKDAYS_ES, list_calendars
+from apps.web.backend.services.connection import ConnectionService, load_config
+from apps.web.backend.services.calendar_logic import WEEKDAYS_ES, list_calendars
 
 def extraer_nombre_y_dni(summary):
     """

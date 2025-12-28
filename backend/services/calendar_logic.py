@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, date, time
 from zoneinfo import ZoneInfo
 
-from services.connection import load_config, ConnectionService
+from apps.web.backend.services.connection import ConnectionService, load_config
 
 @dataclass(frozen=True)
 class Slot:
