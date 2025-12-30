@@ -30,8 +30,8 @@ type AuthStatus =
   | { connected: false }
   | { connected: true; email: string | null }
 
-export default function PediatricSetup() {
-  // Cambiá si tu backend corre en otro puerto / dominio
+// ✅ ESTA ES TU PAGE
+export default function Page() {
   const API_BASE = useMemo(() => "http://localhost:8000", [])
 
   const [step, setStep] = useState(0)
@@ -62,7 +62,6 @@ export default function PediatricSetup() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  // 1) Al cargar: consultar status a main.py (cookie-based)
   useEffect(() => {
     const verifyStatus = async () => {
       setLoadingAuth(true)
@@ -78,7 +77,6 @@ export default function PediatricSetup() {
         } else {
           setCalendarSynced(false)
           setUserEmail(null)
-          // si no está conectado, volvemos al paso 0
           setStep(0)
         }
       } catch (e) {
@@ -94,31 +92,23 @@ export default function PediatricSetup() {
     verifyStatus()
   }, [API_BASE])
 
-  // 2) Conectar Google: pedir URL a main.py y redirigir
   const handleGoogleSync = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/google`, {
         credentials: "include",
       })
       const data = await res.json()
-      if (data?.url) {
-        window.location.href = data.url
-      } else {
-        alert("No se pudo obtener la URL de autenticación.")
-      }
+      if (data?.url) window.location.href = data.url
+      else alert("No se pudo obtener la URL de autenticación.")
     } catch (e) {
       console.error(e)
       alert("Error: Python no responde")
     }
   }
 
-  // Navegación
   const handleNext = () => {
-    if (step === 0) {
-      setStep(1)
-    } else if (step === 1 && clinicInfo.name && clinicInfo.address) {
-      setStep(2)
-    }
+    if (step === 0) setStep(1)
+    else if (step === 1 && clinicInfo.name && clinicInfo.address) setStep(2)
   }
 
   const handleBack = () => {
@@ -126,7 +116,6 @@ export default function PediatricSetup() {
     else if (step === 1) setStep(0)
   }
 
-  // 3) Guardar consultorio + horarios vía main.py (router /api/sedes)
   const handleSubmit = async () => {
     setSaveError(null)
 
@@ -147,10 +136,10 @@ export default function PediatricSetup() {
         email: userEmail,
         nombre: clinicInfo.name,
         direccion: clinicInfo.address,
-        horarios: clinicInfo, // manda el objeto completo (tu backend mapea keys)
+        horarios: clinicInfo,
       }
 
-      const res = await fetch(`${API_BASE}/api/sedes`, {
+      const res = await fetch(`${API_BASE}/api/rooms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -162,8 +151,7 @@ export default function PediatricSetup() {
         throw new Error(err?.detail ?? `Error creando sede (${res.status})`)
       }
 
-      const out = await res.json()
-      console.log("Sede creada:", out)
+      await res.json()
       setDone(true)
     } catch (e: any) {
       console.error(e)
@@ -173,7 +161,6 @@ export default function PediatricSetup() {
     }
   }
 
-  // UI
   return (
     <div className="min-h-screen bg-gradient-to-br from-pediatric-light via-background to-pediatric-accent/10 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
@@ -185,9 +172,7 @@ export default function PediatricSetup() {
           <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">
             Configuración de Consultorio Pediátrico
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Paso {Math.min(step + 1, 3)} de 3
-          </p>
+          <p className="text-muted-foreground text-lg">Paso {Math.min(step + 1, 3)} de 3</p>
         </div>
 
         {/* Progress Bar */}
@@ -204,9 +189,7 @@ export default function PediatricSetup() {
           <Card className="border-pediatric-primary/20">
             <CardHeader>
               <CardTitle className="text-2xl">✅ Configuración completada</CardTitle>
-              <CardDescription>
-                Se creó el consultorio y se guardaron los horarios (y los bloqueos en Google si aplica).
-              </CardDescription>
+              <CardDescription>Se creó el consultorio y se guardaron los horarios.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -220,7 +203,7 @@ export default function PediatricSetup() {
           </Card>
         )}
 
-        {/* Step 0: Google Calendar Sync */}
+        {/* Step 0 */}
         {!done && step === 0 && (
           <Card className="border-pediatric-primary/20">
             <CardHeader>
@@ -228,33 +211,15 @@ export default function PediatricSetup() {
                 <Calendar className="w-6 h-6 text-pediatric-primary" />
                 Sincronizar Calendario
               </CardTitle>
-              <CardDescription>
-                Conecta tu calendario de Google para gestionar las citas de tu consultorio
-              </CardDescription>
+              <CardDescription>Conecta tu calendario de Google para gestionar las citas</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-pediatric-light/30 border border-pediatric-primary/20 rounded-lg p-6 space-y-4">
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-pediatric-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-medium text-base mb-1">¿Por qué sincronizar?</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Al conectar tu calendario de Google, podrás gestionar tus citas desde un solo lugar, recibir
-                      recordatorios automáticos y mantener tu agenda siempre actualizada.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {loadingAuth ? (
                 <div className="text-sm text-muted-foreground">Consultando al servidor...</div>
               ) : calendarSynced ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <div>
-                    <p className="text-sm font-medium text-green-900">Calendario conectado correctamente</p>
-                    {userEmail && <p className="text-xs text-green-900/80">Cuenta: {userEmail}</p>}
-                  </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-sm font-medium text-green-900">Calendario conectado correctamente</p>
+                  {userEmail && <p className="text-xs text-green-900/80">Cuenta: {userEmail}</p>}
                 </div>
               ) : (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -262,50 +227,28 @@ export default function PediatricSetup() {
                 </div>
               )}
 
-              <div className="space-y-3">
-                <Button
-                  onClick={handleGoogleSync}
-                  className="w-full h-12 text-base bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
-                  size="lg"
-                >
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
-                  Conectar con Google Calendar
-                </Button>
-              </div>
+              <Button
+                onClick={handleGoogleSync}
+                className="w-full h-12 text-base bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
+                size="lg"
+              >
+                Conectar con Google Calendar
+              </Button>
 
-              <div className="pt-4">
-                <Button
-                  onClick={handleNext}
-                  disabled={!calendarSynced}
-                  className="w-full h-12 text-base bg-pediatric-primary hover:bg-pediatric-primary/90"
-                  size="lg"
-                >
-                  Continuar
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </div>
+              <Button
+                onClick={handleNext}
+                disabled={!calendarSynced}
+                className="w-full h-12 text-base bg-pediatric-primary hover:bg-pediatric-primary/90"
+                size="lg"
+              >
+                Continuar
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* Step 1: Clinic Information */}
+        {/* Step 1 */}
         {!done && step === 1 && (
           <Card className="border-pediatric-primary/20">
             <CardHeader>
@@ -313,13 +256,11 @@ export default function PediatricSetup() {
                 <Building2 className="w-6 h-6 text-pediatric-primary" />
                 Información del Consultorio
               </CardTitle>
-              <CardDescription>Ingresa el nombre y la dirección de tu consultorio pediátrico</CardDescription>
+              <CardDescription>Ingresa el nombre y la dirección</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-base font-medium">
-                  Nombre del Consultorio
-                </Label>
+                <Label htmlFor="name" className="text-base font-medium">Nombre del Consultorio</Label>
                 <Input
                   id="name"
                   placeholder="Ej: Consultorio Pediátrico Dr. García"
@@ -361,7 +302,7 @@ export default function PediatricSetup() {
           </Card>
         )}
 
-        {/* Step 2: Office Hours */}
+        {/* Step 2 */}
         {!done && step === 2 && (
           <Card className="border-pediatric-primary/20">
             <CardHeader>
@@ -369,7 +310,7 @@ export default function PediatricSetup() {
                 <Clock className="w-6 h-6 text-pediatric-primary" />
                 Horarios de Atención
               </CardTitle>
-              <CardDescription>Define los horarios de atención para cada día de la semana</CardDescription>
+              <CardDescription>Define los horarios</CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -433,12 +374,6 @@ export default function PediatricSetup() {
                   {saving ? "Guardando..." : "Completar Configuración"}
                 </Button>
               </div>
-
-              {/* Nota: tu backend hoy persiste L-V. Si querés S-D, descomentá DAY_FIELDS en gestionar_sedes.py */}
-              <p className="text-xs text-muted-foreground pt-2">
-                Nota: actualmente el backend guarda horarios L-V (según DAY_FIELDS). Si querés incluir sábado/domingo,
-                habilitalos en <code>gestionar_sedes.py</code>.
-              </p>
             </CardContent>
           </Card>
         )}

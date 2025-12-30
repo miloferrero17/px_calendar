@@ -37,7 +37,7 @@ from backend.services.google_calendar.oauth_server import (
     get_user_info,
     encrypt_token,
 )
-from backend.api.gestionar_sedes import router as sedes_router
+from backend.api.room_mgmt import router as rooms_router
 
 app = FastAPI(title="API Consultorio Pediátrico")
 
@@ -51,7 +51,7 @@ app.add_middleware(
 )
 
 # --- RUTAS EXTRA ---
-app.include_router(sedes_router, prefix="/api")
+app.include_router(rooms_router, prefix="/api")
 
 # -----------------------------
 # SESIÓN (cookie) + auth_sessions

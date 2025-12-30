@@ -1,5 +1,5 @@
 '''
-python3 ./backend/wa/solicitar_turno.py --email milonguitaferrero@gmail.com --nombre "Juan Perez" --dni "12345678"
+python3 -m backend.wa.appointment_request --email emilio.ferrero@mercadolibre.com --nombre Juan --dni 32359799
 '''
 # backend/wa/solicitar_turno.py
 import argparse
@@ -7,13 +7,11 @@ import os
 import sys
 from datetime import timedelta
 
-from backend.services.google_calendar import next_n_slots, create_meeting
+from backend.services.google_calendar.calendar_logic import next_n_slots, create_meeting
 from backend.services.google_calendar.connection import ConnectionService, load_config
 from backend.services.google_calendar.calendar_logic import (
     WEEKDAYS_ES,
     list_calendars,
-    next_n_slots,
-    create_meeting,
 )
 
 def main():

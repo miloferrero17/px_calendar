@@ -35,7 +35,7 @@ Files that read env: `backend/main.py`, `backend/services/google_calendar/connec
 - `horarios_atencion` — stores recurring schedule rows
 - `auth_sessions` — session rows used to map browser cookie sessions to an email / oauth_state
 
-Search for these tables in `backend/` to see where they are read/written (e.g., `ConnectionService.get_medico_by_email`, `gestionar_sedes.py`, `setup_availability.py`).
+Search for these tables in `backend/` to see where they are read/written (e.g., `ConnectionService.get_medico_by_email`, `room_mgmt.py`, `setup_availability.py`).
 
 ## Important behavior & patterns (examples to follow)
 
@@ -45,7 +45,7 @@ Search for these tables in `backend/` to see where they are read/written (e.g., 
 
 - Calendar ops: `calendar_logic.next_n_slots` uses Google FreeBusy and expects timezone-aware datetimes (raises if tz-naive). Working timezone is often `America/Argentina/Buenos_Aires` in scheduling helpers.
 
-- Creating a new clinic (sede): POST `/api/sedes` -> `gestionar_sedes.crear_sede` creates a Google Calendar, inserts a `consultorio`, and optionally creates recurring busy events via `setup_availability.configurar_disponibilidad_recurrente`.
+-- Creating a new clinic (sede): POST `/api/rooms` -> `room_mgmt.create_room` creates a Google Calendar, inserts a `consultorio`, and optionally creates recurring busy events via `setup_availability.configurar_disponibilidad_recurrente`.
 
 ## Debugging tips
 
@@ -67,7 +67,7 @@ Search for these tables in `backend/` to see where they are read/written (e.g., 
 - Kick off OAuth (browser is expected): open `http://localhost:3000` and click the "Conectar Google Calendar" button in the UI (it calls `GET /api/auth/google`).
 
 - Create a sede via API (example payload):
-  POST http://localhost:8000/api/sedes
+  POST http://localhost:8000/api/rooms
   Body: { "email": "doc@example.com", "nombre": "Sede Centro", "direccion": "Av X 123", "horarios": { "mondayStart": "08:00", "mondayEnd": "12:00", "fridayStart": "08:00", "fridayEnd": "16:00" } }
 
 ## When in doubt
