@@ -1,91 +1,80 @@
-# --- Python ---
+# --- Sistema Operativo / Editores ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# --- Dependencias (Node/Web) ---
+node_modules/
+jspm_packages/
+.pnp
+.pnp.js
+
+# --- Build y Salida (Next.js / Vite / etc) ---
+.next/
+out/
+dist/
+build/
+.cache/
+.turbo/
+
+# --- Logs ---
+*.log
+logs/
+*.out
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Variables de Entorno y Secretos (Seguridad) ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env*
+!.env.example
+secrets.json
+config.json
+
+# --- Credenciales y Llaves ---
+*.key
+*.pem
+*.p12
+*.pfx
+client_secret*.json
+credentials*.json
+token*.json
+*oauth*.json
+
+# --- Python / Backend (Si aplica) ---
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 *.so
 *.egg-info/
-dist/
-build/
-
-# --- Virtualenvs ---
 .venv/
 venv/
 env/
 ENV/
 pip-wheel-metadata/
-
-# --- Environment / secrets ---
-.env
-.env.*
-!.env.example
-*.key
-*.pem
-*.p12
-*.pfx
-
-# Google OAuth / credentials
-client_secret*.json
-credentials*.json
-token*.json
-*oauth*.json
-
-# Supabase / local config
-config.json
-secrets.json
-
-# --- Logs ---
-*.log
-logs/
-*.out
-
-# --- Flask ---
 instance/
 *.sqlite
 *.db
 
-# --- OS / Editor ---
-.DS_Store
-.vscode/
-.idea/
-
-# --- Archives ---
+# --- Archivos Comprimidos ---
 *.zip
 *.tar.gz
 *.tgz
+*.rar
 
-
-node_modules/
-.env
-.env.local
-.DS_Store
-dist/
-build/
-
-# Dependencias
-node_modules/
-
-# Build de Next.js
-.next/
-out/
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Variables de entorno (¡Muy importante por seguridad!)
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Otros
-.DS_Store
-*.pem
-
-node_modules/
-.next/
-out/
-.env*
+# --- Varios ---
+.vercel
+.netlify

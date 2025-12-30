@@ -6,8 +6,8 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.services.connection import ConnectionService, load_config
-from backend.services.calendar.setup_availability import configurar_disponibilidad_recurrente
+from backend.services.google_calendar.connection import ConnectionService, load_config
+from backend.services.google_calendar.setup_availability import configurar_disponibilidad_recurrente
 
 router = APIRouter()
 

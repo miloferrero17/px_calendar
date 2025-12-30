@@ -1,15 +1,21 @@
 '''
-python3 ./backend/wa/gestionar_turnos.py --email milonguitaferrero@gmail.com --dni "12345678"
+python3 ./backend/wa/appointment_mgmt.py --email milonguitaferrero@gmail.com --dni "12345678"
 '''
-# backend/wa/gestionar_turnos.py
+# backend/wa/appointment_mgmt.py
 import argparse
 import os
 import sys
 import re
 from datetime import datetime
 
-from apps.web.backend.services.connection import ConnectionService, load_config
-from apps.web.backend.services.calendar_logic import WEEKDAYS_ES, list_calendars
+from backend.services.google_calendar.connection import ConnectionService, load_config
+from backend.services.google_calendar.calendar_logic import (
+    WEEKDAYS_ES,
+    list_calendars,
+    next_n_slots,
+    create_meeting,
+)
+
 
 def extraer_nombre_y_dni(summary):
     """
@@ -107,7 +113,7 @@ def main():
             print("✅ Turno anterior liberado.")
             
             # Importamos dinámicamente el script de solicitud
-            import solicitar_turno
+            import backend.wa.appointment_request as appointment_request
             
             # Configuramos sys.argv para que solicitar_turno tome los datos automáticamente
             sys.argv = [sys.argv[0], "--email", args.email, "--dni", dni_ext]
@@ -115,7 +121,7 @@ def main():
                 sys.argv.extend(["--nombre", nombre_ext])
             
             print("Redirigiendo a búsqueda de nuevos horarios...\n")
-            solicitar_turno.main()
+            appointment_request.main()
         else:
             print("❌ No se pudo liberar el turno actual. Intente nuevamente.")
 
