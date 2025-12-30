@@ -1,3 +1,10 @@
+'''
+python3 -m backend.api.room_mgmt \
+  --email "emilio.ferrero@mercadolibre.com" \
+  --nombre "Sede Centro" \
+  --direccion "Av. Corrientes 1234, CABA"
+'''
+
 from __future__ import annotations
 
 import argparse

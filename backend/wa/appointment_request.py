@@ -1,5 +1,5 @@
 '''
-python3 -m backend.wa.appointment_request --email emilio.ferrero@mercadolibre.com --nombre Juan --dni 32359799
+python3 -m backend.wa.appointment_request --email milonguitaferrero@gmail.com --nombre Juan --dni 32359799
 '''
 # backend/wa/solicitar_turno.py
 import argparse
