@@ -201,3 +201,4 @@ async def oauth_callback(request: Request):
 @app.get("/api/health")
 async def health_check():
     return {"status": "online", "database": "connected via python"}
+    

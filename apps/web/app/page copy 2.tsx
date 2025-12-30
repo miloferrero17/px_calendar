@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -26,15 +27,17 @@ type ClinicInfo = {
   sundayEnd: string
 }
 
-type AuthStatus =
-  | { connected: false }
-  | { connected: true; email: string | null }
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000"
 
 export default function PediatricSetup() {
-  // Cambiá si tu backend corre en otro puerto / dominio
-  const API_BASE = useMemo(() => "http://localhost:8000", [])
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const statusParam = searchParams.get("status") // success | error | null
 
   const [step, setStep] = useState(0)
+  const [loading, setLoading] = useState(true)
+
   const [clinicInfo, setClinicInfo] = useState<ClinicInfo>({
     name: "",
     address: "",
@@ -54,65 +57,78 @@ export default function PediatricSetup() {
     sundayEnd: "",
   })
 
-  const [loadingAuth, setLoadingAuth] = useState(true)
   const [calendarSynced, setCalendarSynced] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [oauthError, setOauthError] = useState<string | null>(null)
 
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
+  const days = useMemo(
+    () => [
+      { day: "Lunes", start: "mondayStart", end: "mondayEnd" },
+      { day: "Martes", start: "tuesdayStart", end: "tuesdayEnd" },
+      { day: "Miércoles", start: "wednesdayStart", end: "wednesdayEnd" },
+      { day: "Jueves", start: "thursdayStart", end: "thursdayEnd" },
+      { day: "Viernes", start: "fridayStart", end: "fridayEnd" },
+      { day: "Sábado", start: "saturdayStart", end: "saturdayEnd" },
+      { day: "Domingo", start: "sundayStart", end: "sundayEnd" },
+    ],
+    []
+  )
 
-  // 1) Al cargar: consultar status a main.py (cookie-based)
-  useEffect(() => {
-    const verifyStatus = async () => {
-      setLoadingAuth(true)
-      try {
-        const res = await fetch(`${API_BASE}/api/auth/status`, {
-          credentials: "include",
-        })
-        const data: AuthStatus = await res.json()
+  const verifyStatus = async () => {
+    setLoading(true)
+    setOauthError(null)
 
-        if ("connected" in data && data.connected) {
-          setCalendarSynced(true)
-          setUserEmail(data.email ?? null)
-        } else {
-          setCalendarSynced(false)
-          setUserEmail(null)
-          // si no está conectado, volvemos al paso 0
-          setStep(0)
-        }
-      } catch (e) {
-        console.error("Backend no disponible / error consultando status", e)
-        setCalendarSynced(false)
-        setUserEmail(null)
-        setStep(0)
-      } finally {
-        setLoadingAuth(false)
-      }
-    }
-
-    verifyStatus()
-  }, [API_BASE])
-
-  // 2) Conectar Google: pedir URL a main.py y redirigir
-  const handleGoogleSync = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/auth/google`, {
+      const response = await fetch(`${BACKEND_URL}/api/auth/status`, {
         credentials: "include",
       })
-      const data = await res.json()
-      if (data?.url) {
-        window.location.href = data.url
+
+      if (!response.ok) {
+        throw new Error(`Status ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (data.connected) {
+        setCalendarSynced(true)
+        setUserEmail(data.email ?? null)
       } else {
-        alert("No se pudo obtener la URL de autenticación.")
+        setCalendarSynced(false)
+        setUserEmail(null)
       }
     } catch (e) {
-      console.error(e)
-      alert("Error: Python no responde")
+      console.error("El backend Python no está disponible o falló /api/auth/status", e)
+      setCalendarSynced(false)
+      setUserEmail(null)
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Navegación
+  // 1) Al montar: chequeo estado
+  useEffect(() => {
+    verifyStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 2) Si volvemos desde Google con ?status=success|error:
+  //    - refrescamos status
+  //    - limpiamos el query param para que no quede pegado
+  useEffect(() => {
+    if (!statusParam) return
+
+    if (statusParam === "error") {
+      setOauthError("No se pudo conectar con Google. Probá de nuevo.")
+    }
+
+    ;(async () => {
+      await verifyStatus()
+      // limpiar query param
+      router.replace("/", { scroll: false })
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusParam])
+
   const handleNext = () => {
     if (step === 0) {
       setStep(1)
@@ -122,58 +138,45 @@ export default function PediatricSetup() {
   }
 
   const handleBack = () => {
-    if (step === 2) setStep(1)
-    else if (step === 1) setStep(0)
+    if (step === 2) {
+      setStep(1)
+    } else if (step === 1) {
+      setStep(0)
+    }
   }
 
-  // 3) Guardar consultorio + horarios vía main.py (router /api/sedes)
-  const handleSubmit = async () => {
-    setSaveError(null)
-
-    if (!userEmail) {
-      setSaveError("No hay email conectado. Volvé a conectar Google Calendar.")
-      setStep(0)
-      return
-    }
-    if (!clinicInfo.name || !clinicInfo.address) {
-      setSaveError("Completá nombre y dirección.")
-      setStep(1)
-      return
-    }
-
-    setSaving(true)
+  // OAuth real (backend)
+  const startGoogleOAuth = async () => {
+    setOauthError(null)
     try {
-      const body = {
-        email: userEmail,
-        nombre: clinicInfo.name,
-        direccion: clinicInfo.address,
-        horarios: clinicInfo, // manda el objeto completo (tu backend mapea keys)
-      }
-
-      const res = await fetch(`${API_BASE}/api/sedes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch(`${BACKEND_URL}/api/auth/google`, {
         credentials: "include",
-        body: JSON.stringify(body),
       })
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => null)
-        throw new Error(err?.detail ?? `Error creando sede (${res.status})`)
+      if (!response.ok) {
+        throw new Error(`Status ${response.status}`)
       }
 
-      const out = await res.json()
-      console.log("Sede creada:", out)
-      setDone(true)
-    } catch (e: any) {
-      console.error(e)
-      setSaveError(e?.message ?? "Error desconocido")
-    } finally {
-      setSaving(false)
+      const data = await response.json()
+      if (data.url) window.location.href = data.url
+      else throw new Error("No vino url en /api/auth/google")
+    } catch (e) {
+      console.error("Error: Python no responde /api/auth/google", e)
+      setOauthError("Error: el servidor no respondió. ¿Está corriendo FastAPI en :8000?")
     }
   }
 
-  // UI
+  // Por ahora “Crear nuevo calendario” también usa OAuth.
+  // (Crear realmente un calendar nuevo = endpoint futuro)
+  const handleCreateCalendar = async () => {
+    await startGoogleOAuth()
+  }
+
+  const handleSubmit = () => {
+    console.log("Clinic information:", clinicInfo)
+    alert("¡Configuración completada! Revisa la consola para ver los datos.")
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pediatric-light via-background to-pediatric-accent/10 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
@@ -185,9 +188,7 @@ export default function PediatricSetup() {
           <h1 className="text-4xl font-bold text-foreground mb-2 text-balance">
             Configuración de Consultorio Pediátrico
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Paso {Math.min(step + 1, 3)} de 3
-          </p>
+          <p className="text-muted-foreground text-lg">Paso {step + 1} de 3</p>
         </div>
 
         {/* Progress Bar */}
@@ -199,29 +200,15 @@ export default function PediatricSetup() {
           </div>
         </div>
 
-        {/* DONE */}
-        {done && (
-          <Card className="border-pediatric-primary/20">
-            <CardHeader>
-              <CardTitle className="text-2xl">✅ Configuración completada</CardTitle>
-              <CardDescription>
-                Se creó el consultorio y se guardaron los horarios (y los bloqueos en Google si aplica).
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-green-900">Cuenta: {userEmail}</p>
-                <p className="text-sm text-green-900">Consultorio: {clinicInfo.name}</p>
-              </div>
-              <Button className="w-full" onClick={() => { setDone(false); setStep(0) }}>
-                Volver al inicio
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Loading */}
+        {loading && (
+          <div className="text-center py-10 text-muted-foreground">
+            Consultando al servidor…
+          </div>
         )}
 
         {/* Step 0: Google Calendar Sync */}
-        {!done && step === 0 && (
+        {!loading && step === 0 && (
           <Card className="border-pediatric-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
@@ -239,32 +226,34 @@ export default function PediatricSetup() {
                   <div>
                     <h3 className="font-medium text-base mb-1">¿Por qué sincronizar?</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Al conectar tu calendario de Google, podrás gestionar tus citas desde un solo lugar, recibir
+                      Al conectar tu calendario de Google, podrás gestionar todas tus citas desde un solo lugar, recibir
                       recordatorios automáticos y mantener tu agenda siempre actualizada.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {loadingAuth ? (
-                <div className="text-sm text-muted-foreground">Consultando al servidor...</div>
-              ) : calendarSynced ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <div>
-                    <p className="text-sm font-medium text-green-900">Calendario conectado correctamente</p>
-                    {userEmail && <p className="text-xs text-green-900/80">Cuenta: {userEmail}</p>}
-                  </div>
+              {oauthError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-900">
+                  {oauthError}
                 </div>
-              ) : (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <p className="text-sm font-medium text-amber-900">Todavía no hay una cuenta conectada</p>
+              )}
+
+              {calendarSynced && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-1">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <p className="text-sm font-medium text-green-900">Calendario conectado correctamente</p>
+                  </div>
+                  {userEmail && (
+                    <p className="text-xs text-green-900/70">Cuenta: {userEmail}</p>
+                  )}
                 </div>
               )}
 
               <div className="space-y-3">
                 <Button
-                  onClick={handleGoogleSync}
+                  onClick={startGoogleOAuth}
                   className="w-full h-12 text-base bg-white hover:bg-gray-50 text-gray-900 border border-gray-300"
                   size="lg"
                 >
@@ -286,7 +275,16 @@ export default function PediatricSetup() {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Conectar con Google Calendar
+                  Sincronizar con Google Calendar
+                </Button>
+
+                <Button
+                  onClick={handleCreateCalendar}
+                  variant="outline"
+                  className="w-full h-12 text-base bg-transparent"
+                  size="lg"
+                >
+                  Crear Nuevo Calendario en Google
                 </Button>
               </div>
 
@@ -306,7 +304,7 @@ export default function PediatricSetup() {
         )}
 
         {/* Step 1: Clinic Information */}
-        {!done && step === 1 && (
+        {!loading && step === 1 && (
           <Card className="border-pediatric-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
@@ -362,7 +360,7 @@ export default function PediatricSetup() {
         )}
 
         {/* Step 2: Office Hours */}
-        {!done && step === 2 && (
+        {!loading && step === 2 && (
           <Card className="border-pediatric-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
@@ -371,23 +369,8 @@ export default function PediatricSetup() {
               </CardTitle>
               <CardDescription>Define los horarios de atención para cada día de la semana</CardDescription>
             </CardHeader>
-
             <CardContent className="space-y-4">
-              {saveError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm font-medium text-red-900">Error: {saveError}</p>
-                </div>
-              )}
-
-              {[
-                { day: "Lunes", start: "mondayStart", end: "mondayEnd" },
-                { day: "Martes", start: "tuesdayStart", end: "tuesdayEnd" },
-                { day: "Miércoles", start: "wednesdayStart", end: "wednesdayEnd" },
-                { day: "Jueves", start: "thursdayStart", end: "thursdayEnd" },
-                { day: "Viernes", start: "fridayStart", end: "fridayEnd" },
-                { day: "Sábado", start: "saturdayStart", end: "saturdayEnd" },
-                { day: "Domingo", start: "sundayStart", end: "sundayEnd" },
-              ].map((item) => (
+              {days.map((item) => (
                 <div
                   key={item.day}
                   className="grid grid-cols-1 md:grid-cols-[120px_1fr_1fr] gap-4 items-center p-4 rounded-lg bg-muted/30"
@@ -426,19 +409,12 @@ export default function PediatricSetup() {
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  disabled={saving}
                   className="flex-1 h-12 text-base bg-pediatric-primary hover:bg-pediatric-primary/90"
                   size="lg"
                 >
-                  {saving ? "Guardando..." : "Completar Configuración"}
+                  Completar Configuración
                 </Button>
               </div>
-
-              {/* Nota: tu backend hoy persiste L-V. Si querés S-D, descomentá DAY_FIELDS en gestionar_sedes.py */}
-              <p className="text-xs text-muted-foreground pt-2">
-                Nota: actualmente el backend guarda horarios L-V (según DAY_FIELDS). Si querés incluir sábado/domingo,
-                habilitalos en <code>gestionar_sedes.py</code>.
-              </p>
             </CardContent>
           </Card>
         )}
