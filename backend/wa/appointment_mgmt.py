@@ -1,5 +1,5 @@
 '''
-python3 ./backend/wa/appointment_mgmt.py --email milonguitaferrero@gmail.com --dni "12345678"
+python3 -m backend.wa.appointment_mgmt --email milonguitaferrero@gmail.com
 '''
 # backend/wa/appointment_mgmt.py
 import argparse
